@@ -339,6 +339,83 @@ describe('API de Películas', () => {
       // ASSERT
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Película no encontrada');
+  });
+
+  // ==========================================
+  // TESTS DE ACTUALIZAR RATING (PATCH /api/movies/:id/rating)
+  // ==========================================
+  describe('PATCH /api/movies/:id/rating', () => {
+    
+    it('debería actualizar el rating de una película correctamente', async () => {
+      // ARRANGE
+      const updatedMovie = {
+        id: 'movie-1',
+        title: 'Inception',
+        director: 'Christopher Nolan',
+        year: 2010,
+        posterUrl: 'https://example.com/inception.jpg',
+        rating: 5,
+        ownerId: 'user-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prisma.movie.updateMany.mockResolvedValue({ count: 1 });
+      prisma.movie.findUnique.mockResolvedValue(updatedMovie);
+
+      // ACT
+      const response = await request(app)
+        .patch('/api/movies/movie-1/rating')
+        .set('Authorization', 'Bearer fake-token')
+        .send({ rating: 5 });
+
+      // ASSERT
+      expect(response.status).toBe(200);
+      expect(response.body.rating).toBe(5);
+      expect(prisma.movie.updateMany).toHaveBeenCalledWith({
+        where: { id: 'movie-1', ownerId: 'user-123' },
+        data: { rating: 5 },
+      });
+      expect(prisma.movie.findUnique).toHaveBeenCalledWith({ where: { id: 'movie-1' } });
+    });
+
+    it('debería devolver 400 si el rating no es válido', async () => {
+      // ACT
+      const response = await request(app)
+        .patch('/api/movies/movie-1/rating')
+        .set('Authorization', 'Bearer fake-token')
+        .send({ rating: 6 }); // Rating inválido
+
+      // ASSERT
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Rating debe ser un número entero entre 1 y 5');
+    });
+
+    it('debería devolver 400 si no se proporciona rating', async () => {
+      // ACT
+      const response = await request(app)
+        .patch('/api/movies/movie-1/rating')
+        .set('Authorization', 'Bearer fake-token')
+        .send({}); // Sin rating
+
+      // ASSERT
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Rating es requerido');
+    });
+
+    it('debería devolver 404 si la película no existe', async () => {
+      // ARRANGE
+      prisma.movie.updateMany.mockResolvedValue({ count: 0 });
+
+      // ACT
+      const response = await request(app)
+        .patch('/api/movies/no-existe/rating')
+        .set('Authorization', 'Bearer fake-token')
+        .send({ rating: 4 });
+
+      // ASSERT
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe('Película no encontrada');
     });
   });
 });
@@ -372,3 +449,4 @@ describe('API de Películas', () => {
  *    Usa este archivo como referencia para crear los tests
  *    del endpoint PATCH /api/movies/:id/rating
  */
+});

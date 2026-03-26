@@ -4,6 +4,7 @@ const {
   getAllMovies,
   getMovieById,
   createMovie,
+  ratingMovie,
   updateMovie,
   deleteMovie,
 } = require('../controllers/movieController');
@@ -18,6 +19,7 @@ router.use(authMiddleware);
 router.get('/', getAllMovies);      // GET /api/movies - Listar mis películas
 router.get('/:id', getMovieById);   // GET /api/movies/:id - Ver una película
 router.post('/', createMovie);      // POST /api/movies - Crear película
+router.patch('/:id/rating', ratingMovie); // PATCH /api/movies/:id/rating - Actualizar rating película
 router.put('/:id', updateMovie);    // PUT /api/movies/:id - Actualizar película
 router.delete('/:id', deleteMovie); // DELETE /api/movies/:id - Eliminar película
 

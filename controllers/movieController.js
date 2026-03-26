@@ -38,6 +38,36 @@ exports.getMovieById = async (req, res) => {
   }
 };
 
+//PATCH /api/movies/:id/rating - Actualiza el rating de una película existente
+exports.ratingMovie = async (req, res) => {
+  const { id } = req.params;
+  const { rating } = req.body;
+
+  if (rating === undefined || rating === null) {
+    return res.status(400).json({ error: 'Rating es requerido' });
+  }
+
+  if (typeof rating !== 'number' || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Rating debe ser un número entero entre 1 y 5' });
+  }
+
+  try {
+    const result = await prisma.movie.updateMany({
+      where: { id, ownerId: req.user.userId },
+      data: { rating },
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'Película no encontrada' });
+    }
+
+    const updatedMovie = await prisma.movie.findUnique({ where: { id } });
+    res.json(updatedMovie);
+  } catch (error) {
+    res.status(500).json({ error: 'No se pudo actualizar el rating' });
+  }
+};
+
 // POST /api/movies - Crea una nueva película
 exports.createMovie = async (req, res) => {
   const { title, director, year, posterUrl } = req.body;
